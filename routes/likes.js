@@ -40,7 +40,7 @@ router.get("/:tweetId", function (req, res) {
       res.json({ result: true, likes: data });
     })
     .catch((err) => {
-      console.log("Erreur GET /likes/:tweetId :", err);
+      console.log("Erreur GET", err);
       res.json({ result: false, error: "likes non trouvés" });
     });
 });
@@ -53,7 +53,7 @@ router.delete("/:id", function (req, res) {
       res.json({ result: true });
     })
     .catch((err) => {
-      console.log("Erreur DELETE /likes/:id :", err);
+      console.log("Erreur DELETE :", err);
       res.json({ result: false, error: "like non supprimé" });
     });
 });
