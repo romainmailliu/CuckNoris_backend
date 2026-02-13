@@ -9,6 +9,7 @@ router.post("/", function (req, res) {
   const { user_id, tweet_id } = req.body;
 
   if (!user_id || !tweet_id) {
+    //si les champs sont vides
     return res.json({
       result: false,
       error: "user_id et tweet_id sont requis",
@@ -16,6 +17,7 @@ router.post("/", function (req, res) {
   }
 
   const newLike = new Like({
+    //Création d'un user ID et d'un Tweet ID pour identifier le tweet liké
     user_id,
     tweet_id,
   });
@@ -35,7 +37,7 @@ router.post("/", function (req, res) {
 // GET /likes/:tweetId
 router.get("/:tweetId", function (req, res) {
   Like.find({ tweet_id: req.params.tweetId })
-    .populate("user_id", "firstname")
+    .populate("user_id", "firstname") //Récupère les personnes qui ont liké le tweet
     .then((data) => {
       res.json({ result: true, likes: data });
     })
