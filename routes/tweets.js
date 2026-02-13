@@ -43,15 +43,16 @@ router.delete("/:id", function (req, res) {
 router.put("/:id", function (req, res) {
   const { content } = req.body; // le nouveau texte du tweet
 
-  Tweet.updateOne({ _id: req.params.id }, { content })
-    .then((data) => {
-      if (data.modifiedCount === 0) {
-        return res.json({
-          result: false,
-          error: "tweet non trouvé ou inchangé",
-        });
+  Tweet.findByIdAndUpdate(
+    req.params.id,
+    { content },
+    { new: true }, // renvoie le tweet après modification
+  )
+    .then((tweet) => {
+      if (!tweet) {
+        return res.json({ result: false, error: "tweet non trouvé" });
       }
-      res.json({ result: true });
+      res.json({ result: true, tweet });
     })
     .catch((err) => {
       res.json({ result: false, error: "tweet non modifié" });
