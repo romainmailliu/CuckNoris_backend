@@ -92,4 +92,14 @@ router.post("/signin", async (req, res) => {
   }
 });
 
+router.get("/canTweet/:token", (req, res) => {
+  User.findOne({ token: req.params.token }).then((data) => {
+    if (data) {
+      res.json({ result: true, canTweet: data.canTweet });
+    } else {
+      res.json({ result: false, error: "User not found" });
+    }
+  });
+});
+
 module.exports = router;

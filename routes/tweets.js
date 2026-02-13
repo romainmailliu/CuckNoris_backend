@@ -2,13 +2,29 @@ var express = require("express");
 var router = express.Router();
 var Tweet = require("../models/tweets");
 var Hashtag = require("../models/hashtag");
+var User = require("../models/users");
 
 // Créer un tweet
 
 // ✅ Créer un tweet
 router.post("/", async function (req, res) {
   try {
-    const { content, author } = req.body;
+    const { content, token } = req.body;
+
+    if (!token) {
+      return res
+        .status(400)
+        .json({ result: false, error: "Missing content or token" });
+    }
+
+    // ✅ Récupérer l'utilisateur via le token
+    const user = await User.findOne({ token });
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ result: false, error: "User not found or invalid token" });
+    }
 
     // ✅ 1. Extraction des hashtags
     const regex = /#(\w+)/g;
@@ -42,7 +58,7 @@ router.post("/", async function (req, res) {
     // ✅ 3. Création du tweet avec hashtags
     const newTweet = new Tweet({
       content,
-      author,
+      author: user._id, // ObjectId de l'utilisateur
       hashtags: hashtagIds,
     });
 
@@ -55,7 +71,22 @@ router.post("/", async function (req, res) {
   }
 });
 
-module.exports = router;
+// Récupérer tous les tweets
+router.get("/", async function (req, res) {
+  try {
+    const tweets = await Tweet.find()
+      .populate("author", "firstname username") // important car Feed utilise props.author.firstname
+      .sort({ createdAt: -1 }); // les plus récents en premier
+
+    res.json({ result: true, tweets });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      result: false,
+      error: "Erreur lors de la récupération des tweets",
+    });
+  }
+});
 
 router.delete("/:id", function (req, res) {
   Tweet.deleteOne({ _id: req.params.id })
