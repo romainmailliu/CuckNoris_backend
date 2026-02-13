@@ -6,9 +6,11 @@ var Hashtag = require("../models/hashtag");
 //  Récupérer tous les hashtags
 router.get("/", async (req, res) => {
   try {
-    const hashtags = await Hashtag.find();
-    const names = hashtags.map((tag) => tag.name); //Ne renvoie que les noms des #
-    res.json({ result: names });
+    const hashtags = await Hashtag.find(
+      {}, // pas de filtre
+      { name: 1, count: 1 }, // projection : champs à renvoyer
+    );
+    res.json({ result: hashtags });
   } catch (error) {
     res.json({ message: "Erreur serveur", error });
   }

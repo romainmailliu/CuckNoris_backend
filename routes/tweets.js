@@ -44,13 +44,13 @@ router.post("/", async function (req, res) {
     }
     const hashtagIds = [];
 
-    // ✅ 2. Vérifier / créer les hashtags
+    // ✅ 2. Incrémentation automatique
     for (let tag of uniqueTags) {
-      let hashtag = await Hashtag.findOne({ name: tag });
-
-      if (!hashtag) {
-        hashtag = await Hashtag.create({ name: tag });
-      }
+      const hashtag = await Hashtag.findOneAndUpdate(
+        { name: tag },
+        { $inc: { count: 1 } },
+        { new: true, upsert: true },
+      );
 
       hashtagIds.push(hashtag._id);
     }
