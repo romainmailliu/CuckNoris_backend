@@ -75,8 +75,8 @@ router.post("/", async function (req, res) {
 router.get("/", async function (req, res) {
   try {
     const tweets = await Tweet.find()
-      .populate("author", "firstname username") // important car Feed utilise props.author.firstname
-      .sort({ createdAt: -1 }); // les plus récents en premier
+      .populate("author", "firstname username")
+      .sort({ createdAt: -1 });
 
     res.json({ result: true, tweets });
   } catch (err) {
@@ -89,12 +89,44 @@ router.get("/", async function (req, res) {
 });
 
 router.delete("/:id", function (req, res) {
-  Tweet.deleteOne({ _id: req.params.id })
-    .then((data) => {
-      res.json({ result: true, tweets: data });
+  // Accepte le token dans le body OU dans le header Authorization (certains clients n'envoient pas le body en DELETE)
+  const authHeader = req.headers.authorization;
+  const token =
+    req.body?.token ||
+    (authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7)
+      : null);
+
+  if (!token) {
+    return res.status(400).json({ result: false, error: "Missing token" });
+  }
+
+  User.findOne({ token })
+    .then((user) => {
+      if (!user) {
+        return res
+          .status(401)
+          .json({ result: false, error: "User not found or invalid token" });
+      }
+
+      return Tweet.findOneAndDelete({
+        _id: req.params.id,
+        author: user._id,
+      });
+    })
+    .then((deletedTweet) => {
+      if (!deletedTweet) {
+        return res.status(403).json({
+          result: false,
+          error: "Not allowed to delete this tweet",
+        });
+      }
+
+      res.json({ result: true });
     })
     .catch((err) => {
-      res.json({ result: false, error: "tweet non supprimé" });
+      console.error(err);
+      res.status(500).json({ result: false, error: "tweet non supprimé" });
     });
 });
 
